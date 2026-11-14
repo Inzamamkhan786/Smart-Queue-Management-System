@@ -10,9 +10,20 @@ import tokenRoutes from './routes/tokens.js';
 import analyticsRoutes from './routes/analytics.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/errors.js';
+import { initializeSchema } from './db/initialize.js';
+import { pool } from './db/pool.js';
 
 if (!process.env.DATABASE_URL || !process.env.JWT_SECRET) {
   throw new Error('DATABASE_URL and JWT_SECRET must be set.');
+}
+
+try {
+  await initializeSchema();
+  console.log('Database schema is ready.');
+} catch (error) {
+  console.error('Database initialization failed:', error.message);
+  await pool.end();
+  process.exit(1);
 }
 
 const app = express();

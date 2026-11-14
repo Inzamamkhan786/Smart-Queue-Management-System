@@ -1,10 +1,9 @@
 import '../config/env.js';
-import { readFile } from 'node:fs/promises';
 import { pool } from './pool.js';
+import { initializeSchema } from './initialize.js';
 
 try {
-  const schema = await readFile(new URL('./schema.sql', import.meta.url), 'utf8');
-  await pool.query(schema);
+  await initializeSchema();
   console.log('Database schema initialized.');
 } catch (error) {
   console.error('Database initialization failed:', error.message);

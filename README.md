@@ -9,18 +9,17 @@ QueueFlow is a queue management workspace for service managers. It includes a re
 
 ## Local setup
 
-1. Create a PostgreSQL database named `queueflow`.
+1. Create a PostgreSQL database named `queueflow` (the database server does not create this database for the app).
 2. From the repository root, copy `.env.example` to `.env` and set `DATABASE_URL` and a long random `JWT_SECRET`. Both the API and Vite load this root-level file.
-3. Initialize the schema and install dependencies:
+3. Install dependencies:
 
    ```sh
    npm install
    npm install --prefix server
    npm install --prefix client
-   npm run db:init --prefix server
    ```
 
-4. Start the API and frontend:
+4. Start the API and frontend. On startup, the API creates any missing tables and indexes from `server/src/db/schema.sql`:
 
    ```sh
    npm run dev
@@ -32,7 +31,7 @@ The API uses an HTTP-only, same-site session cookie. For local development, the 
 
 ## Database
 
-`server/src/db/schema.sql` is the initial schema. Run `npm run db:init --prefix server` after creating the database. Managers own queues; deleting a manager/queue cascades related data. Token rows remain in the database on cancel or completion to preserve history. Each queue's monotonically increasing counter generates never-reused token numbers.
+`server/src/db/schema.sql` is the initial schema and is applied automatically at API startup. The database named in `DATABASE_URL` must already exist, and its user needs permission to create tables and indexes. You can also apply the same idempotent schema manually with `npm run db:init --prefix server`. Managers own queues; deleting a manager/queue cascades related data. Token rows remain in the database on cancel or completion to preserve history. Each queue's monotonically increasing counter generates never-reused token numbers.
 
 Critical token actions run in PostgreSQL transactions and lock the parent queue row. This serializes arrivals, service, completion, cancellation, and reordering for a given queue while allowing separate queues to proceed concurrently.
 
@@ -83,7 +82,7 @@ All JSON request/response bodies use camelCase. Protected endpoints require the 
 1. Create a managed PostgreSQL database and a Render Web Service from this repository.
 2. Set the service root directory to `server`, build command to `npm install`, and start command to `npm start`.
 3. Add `DATABASE_URL` (Render's internal database URL), `JWT_SECRET`, `CLIENT_URL` (your deployed frontend origin), `NODE_ENV=production`, and `COOKIE_SECURE=true`.
-4. Initialize schema once using `npm run db:init` from the server directory, with the production database URL in the service environment.
+4. The API initializes its tables and indexes automatically at startup. The Render database itself must be provisioned first and its internal URL set as `DATABASE_URL`.
 
 ### Vercel (frontend)
 
